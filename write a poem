@@ -1,0 +1,96 @@
+#第一步，下载jieba包，读取文件
+library("jiebaR")
+library("jiebaRD")
+fileName<-“/Users/mac/Desktop/poem/friendship.txt” #以友情为主题的诗词
+SC<-readChar(fileName,file.info(fileName)$size)  #readChar函数：第二个参数是文件的字数
+#file.info()函数：输出文件的一些参数，其中有一个是size，也就是字数
+
+#第二步，处理文件，进行分词、筛选
+analysis<-as.data.frame(table(worker(“tag”)[SC]))  #worker函数进行分词，table进行词频统计
+names(analysis)<-c("Words","Freq")
+analysis$Words<-as.character(analysis$Words)
+analysis_Words<-as.vector(analysis_Words<-analysis[,1])
+example<-subset(analysis,Freq>1&Freq<300) 
+#剔除一些奇怪的不常用的词（也就是出现次数只有一次的），以及词牌名、
+作者名等与诗词本身无关的（即出现超过三百次的），形成新的词库example
+example<-example$Words[-1]
+
+#第三步，选好模版，进行分词，标注词性
+poem_mode<-"云想衣裳花想容，春风拂槛露华浓。若非群玉山头见，会向瑶台月下逢。"
+poem_mode_words<-worker("tag")[poem_mode]
+cixing<-attributes(poem_mode_words)$names #提取出模板中词语的词性，形成向量cixing
+
+#第四步，写函数，并运行
+write_poem<-function(m){
+   set.seed(m)
+   empty<-""
+   for(i in 1:length(poem_mode_words)){
+      temp_file<-example[attributes(example)$name==cixing[i]]
+      temp_file<-example[nchar(example)==nchar(poem_mode_words[i])]
+      temp_file<-as.vector(temp_file)
+      empty<-paste0(empty,sample(temp_file,size=1))
+   }
+   result<-paste0(substr(empty,1,7),"，",substr(empty,8,14),"。",substr(empty,15,21),"，",substr(empty,22,28),"。")
+   return(result)
+}
+write_poem(1)
+lapply(1:10,write_poem) #按m＝1:10，重复运行10次函数
+
+#第五步，加入条件语句，做成藏头诗
+write_poem<-function(m=20,startword=c("起","来","学","习")){
+  set.seed(m)
+  empty<-""#把要生成的诗放进empty
+  for(i in 1:length(poem_mode_words)){
+    if(i==1){
+      matched=""
+      temp_file<-example[nchar(example)==nchar(poem_mode_words[i])]
+      for(j in 1:length(temp_file)){
+        if(substr(temp_file[j],1,1)==startword[1]){
+          matched<-temp_file[j]
+        }
+      }
+      empty<-paste0(empty,matched)
+    }
+    if(i==4){
+      matched=""
+      temp_file<-example[nchar(example)==nchar(poem_mode_words[i])]
+      for(j in 1:length(temp_file)){
+        if(substr(temp_file[j],1,1)==startword[2]){
+          matched<-temp_file[j]
+        }
+      }
+      empty<-paste0(empty,matched)
+    }
+    if(i==7){
+      matched=""
+      temp_file<-example[nchar(example)==nchar(poem_mode_words[i])]
+      for(j in 1:length(temp_file)){
+        if(substr(temp_file[j],1,1)==startword[3]){
+          matched<-temp_file[j]
+        }
+      }
+      empty<-paste0(empty,matched)
+    }
+    if(i==11){
+      matched=""
+      temp_file<-example[nchar(example)==nchar(poem_mode_words[i])]
+      for(j in 1:length(temp_file)){
+        if(substr(temp_file[j],1,1)==startword[4]){
+          matched<-temp_file[j]
+        }
+      }
+      empty<-paste0(empty,matched)
+    }
+    if((i!=1)&&(i!=4)&&(i!=7)&&(i!=11)){
+      temp_file<-example[attributes(example)$name==cixing[i]]
+      temp_file<-example[nchar(example)==nchar(poem_mode_words[i])]
+      temp_file<-as.vector(temp_file)
+      empty<-paste0(empty,sample(temp_file,size=1))
+    }
+  }
+  result<-paste0(substr(empty,1,7),"，",substr(empty,8,14),"。",substr(empty,15,21),"，",substr(empty,22,28),"。")
+  return(result)
+}
+write_poem(22,startword = c("要","点","名","了"))
+lapply(1:10,write_poem)
+
